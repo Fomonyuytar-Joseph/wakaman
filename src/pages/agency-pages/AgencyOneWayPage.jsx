@@ -44,9 +44,11 @@ const AgencyOneWayPage = () => {
     setShow(true);
   };
 
-  onAuthStateChanged(auth, (currentUser) => {
-    setCurrentEmail(currentUser.email);
-  });
+  useEffect(() => {
+    onAuthStateChanged(auth, (currentUser) => {
+      setCurrentEmail(currentUser.email);
+    });
+  }, []);
 
   // console.log(currentEmail);
 
@@ -73,26 +75,31 @@ const AgencyOneWayPage = () => {
     // };
 
     // getAgency();
+    const timeout = setTimeout(() => {
+      const getOneWayTickets = async () => {
+        const oneWayTicketsRef = collection(db, "oneWayTickets");
+        try {
+          const q = query(
+            oneWayTicketsRef,
+            where("agencyEmail", "==", currentEmail)
+          );
 
-    const getOneWayTickets = async () => {
-      const oneWayTicketsRef = collection(db, "oneWayTickets");
-      try {
-        const q = query(
-          oneWayTicketsRef,
-          where("agencyEmail", "==", currentEmail)
-        );
+          const data = await getDocs(q);
+          setTicketsList(
+            data.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
+          );
 
-        const data = await getDocs(q);
-        setTicketsList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+          setShow(false);
+        } catch (err) {
+          console.log(err.message);
+        }
+      };
 
-        setShow(false);
-      } catch (err) {
-        console.log(err.message);
-      }
-    };
+      getOneWayTickets();
+    }, 1500);
 
-    getOneWayTickets();
-  }, [currentEmail, trigger]);
+    return () => clearTimeout(timeout);
+  }, [currentEmail]);
 
   useEffect(() => {
     const getPurchasedTickets = async () => {
@@ -115,10 +122,10 @@ const AgencyOneWayPage = () => {
     };
 
     getPurchasedTickets();
-  }, [currentEmail, trigger]);
+  }, [currentEmail]);
 
-  console.log(ticketsList);
-  console.log(editTicketsList);
+  // console.log(ticketsList);
+  // console.log(editTicketsList);
 
   dispatch(oneWayTicketsInfo(ticketsList));
 
